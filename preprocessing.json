@@ -1,0 +1,45 @@
+{
+  "replace": {
+    "ID003_clinic_007": [[6177, 6178, " "]]
+  },
+  "duplicates": [
+    "The patient has a surgical incision, and should monitor for signs and symptoms of infection which include, but are not limited to, redness at the site of the incision, purulent drainage from the incision, separation of the wound edges, nausea, vomiting, general malaise, fevers greater than 101\\.5 degrees Fahrenheit, and chills\\.\\s+If these occur in combination or if there is gross purulence coming from the wound, the patient should call\\.",
+    "The surgical wound should be kept clean, and this is best accomplished by letting shower water run across it\\.\\s+The wound should not be directly rubbed or scrubbed for a period of at least one month\\.\\s+The wound should not be immersed in water \\(i\\.e\\. hot tub, bath tub, swimming, etc\\.\\) for a period of six weeks\\.",
+    "Your incision has been closed with sutures\\.  Sutures should be removed 10-14 days after surgery\\.  You may schedule an appointment with your primary care provider to have the sutures removed\\.  Your provider or their nurse may remove the sutures\\.",
+    "Take your pain medications as instructed\\.  It is best to take pain medications before your pain becomes severe\\. This will allow you to take less medication yet have better pain relief\\.  For the first 2 or 3 days it may be helpful to take your pain medications on a regular schedule \\(e\\.g\\. every 4 to 6 hours\\)\\. This will help you to keep your pain under better control\\. You should then begin to take fewer medications each day until you no longer need them\\.",
+    "Do not consume more than 4000 mg or 4 gm of Tylenol or acetaminophen-containing products \\(Percocet, Vicodin, etc\\.\\) within a 24 hour time period to avoid damage to your liver\\.",
+    "Do not take pain medication on an empty stomach\\. This may lead to nausea and vomiting\\.",
+    "Do not drive, operate heavy machinery, ride motorcycles or ATVs, drink alcohol, or take other drugs that make you tired or sleepy while taking narcotic pain medications \\(Percocet, Vicodin, oxycodone, etc\\.\\)\\.  Do not participate in any dangerous activity while taking pain medications\\. Pain medications may decrease your ability to make safe decisions\\.",
+    "If you currently smoke cigarettes, cigars, or pipes; chew tobacco; or have done so in the past 12 months, it is important to quit\\.  Talk with your physician about different ways to stop smoking\\.  For additional information about smoking cessation, go to http://www\\.flickr\\.com/fluinfo\\.php or call 234-860-4879\\.",
+    "Narcotic pain medications can cause numerous side effects including nausea, constipation, and confusion\\.  You should not operate a motor vehicle or consume alcohol while taking narcotic medications\\.  The medication may be used for short time after surgery\\.  At any time, Tylenol can be used instead\\.  1000 mg of Tylenol can be taken safely in most patients every six hours\\.   While taking narcotic, you should also take a stool softener such as Colace, 100 mg twice daily to prevent constipation\\.  You may take Percocet or Vicodin up to 2 tablets every 4 hours\\.     Acetaminophen is the active ingredient in Tylenol, found in most narcotic pain medications, including Percocet or Vicodin, and found in many over-the-counter preparations\\.  You should not exceed 4000 mg of acetaminophen in one 24 hour period\\.",
+    "The patient should not lift anything greater than 10 pounds for 6 weeks\\.",
+    "Contact Information",
+    "If you experience a medical emergency, please call your local emergency response telephone number\\.  For other questions, call the Oakcrest Medical Center 24-hour telephone number: 256-705-7296\\.  Ask to be connected to the following service: Cedar Manor and Back Center",
+    "You have a surgical incision, which should be monitored for signs and symptoms of infection\\. These include, but are not limited to fever, increased wound pain, redness, swelling or discharge from the wound site\\. Should you note any of these, you should seek immediate medical attention, and contact Kerry Harper service via the MCHC operator\\.",
+    "You may shower, but should avoid prolonged exposure of your wound to water for 6 weeks\\. Do not apply any ointments, salves or dressings to the wound, which should be left open to air\\.",
+    "Your wound closures \\(staples/sutures\\) may be removed no sooner than 14 days following your operation\\. This can be accomplished by your primary care provider\\.",
+    "You are discharged on narcotic medication\\. Do not drive or operate machinery while using this medication\\. Narcotics may cause constipation\\. You should increase your dietary fiber while using this medication\\. Over-the-counter stool softeners may also be helpful for constipation\\.",
+    "Narcotic pain medication may cause constipation\\.  To prevent this it is recommended that you drink lots of fluid and increase the fiber in your diet\\.  Walking is a good way to get your bowels moving\\.  If needed, you may take an over-the-counter stool softener such as docusate sodium \\(Colace\\) or senna \\(Senokot\\)\\.",
+    "The patient may be evaluated by an outpatient physical therapist and may use this dismissal summary as a prescription for the therapist to evaluate and treat the patient accordingly\\."
+  ],
+  "section_names": {
+    "20112":"Impression and Report and Plan",
+    "20113": "Diagnosis",
+    "20102": "Chief Complaint/Reason for Visit",
+    "20103": "History of Present Illness",
+    "20107": "Past Medical/Surgical History",
+    "20108": "Social History",
+    "20109": "Family History",
+    "20110": "Vital Signs",
+    "20111": "Physical Examination",
+    "20106": "System Review",
+    "20115": "Special Instructions",
+    "20101": "Referral Source",
+    "$final": "Final Diagnosis",
+    "$gross": "Gross Description",
+    "20148": "20148",
+    "20100": "Revision History",
+    "20145": "20145",
+    "20146": "20146"
+  }
+}
