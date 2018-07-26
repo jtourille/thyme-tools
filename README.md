@@ -7,7 +7,7 @@ This repository regroups useful modules for THYME corpus processing.
 THYME corpus annotations are encoded in anafora standoff format. The launcher ANAFORA-TO-BRAT allows to transform 
 these annotation to brat format
 
-```bash
+```shell
 python launcher.py ANAFORA-TO-BRAT \
   --input-anafora /path/to/thymedata/coloncancer/Train \
   --input-thyme /path/to/source-data/train \
