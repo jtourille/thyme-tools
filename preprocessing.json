@@ -1,6 +1,7 @@
 {
   "replace": {
-    "ID003_clinic_007": [[6177, 6178, " "]]
+    "ID003_clinic_007": [[6177, 6178, " "]],
+    "doc0016_RAD": [[281, 282, " "]]
   },
   "duplicates": [
     "The patient has a surgical incision, and should monitor for signs and symptoms of infection which include, but are not limited to, redness at the site of the incision, purulent drainage from the incision, separation of the wound edges, nausea, vomiting, general malaise, fevers greater than 101\\.5 degrees Fahrenheit, and chills\\.\\s+If these occur in combination or if there is gross purulence coming from the wound, the patient should call\\.",
