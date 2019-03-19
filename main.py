@@ -16,7 +16,7 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(title="Sub-commands", description="Valid sub-commands",
                                        help="Valid sub-commands", dest="subparser_name")
 
-    # THYME CORPUS CONVERSION FROM ANAFORA TO BRAT FORMAT
+    # Thyme corpus conversion from anafora to brat.
     parser_brat_conversion = subparsers.add_parser('ANAFORA-TO-BRAT', help="Convert THYME corpus to brat format")
     parser_brat_conversion.add_argument("--input-anafora", help="Input anafora annotation directory",
                                         dest="input_anafora", type=str, required=True)
@@ -34,6 +34,8 @@ if __name__ == "__main__":
     timestamp = time.strftime("%Y%m%d-%H%M%S")
 
     if args.subparser_name == "ANAFORA-TO-BRAT":
+
+        start = time.time()
 
         # Logging to stdout
         logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(message)s')
@@ -67,8 +69,6 @@ if __name__ == "__main__":
             shutil.rmtree(os.path.abspath(args.output_dir))
 
         ensure_dir(args.output_dir)
-
-        start = time.time()
 
         # Starting conversion
         anafora_to_brat(
