@@ -3,24 +3,34 @@ import json
 import logging
 import os
 import re
+import time
 
 from lxml import etree
 
-from .brat import generate_brat_conf_files
+from .brat import generate_brat_conf_files, parse_ann_file
+from .utils import ensure_dir
 
-REGEX_TEMPORAL_FILE = re.compile(".*\.Temporal-(Relation|Entity).(gold|system).completed.xml")
+REGEX_TEMPORAL_FILE = re.compile(r".*\.Temporal-(Relation|Entity).(gold|system).completed.xml")
 
 
-def anafora_to_brat(input_anafora_path, input_thyme_path, output_brat_path, preproc_file_path):
+def anafora_to_brat(input_anafora_path: str = None,
+                    input_thyme_path: str = None,
+                    output_brat_path: str = None,
+                    preproc_file_path: str = None) -> None:
     """
     Convert a THYME corpus part to brat format
-    :param input_anafora_path: annotations path (anafora format)
-    :param input_thyme_path: corpus path (text format)
-    :param output_brat_path: output path where brat files will be written
-    :param preproc_file_path: preprocessing option file path (json file)
-    :return: nothing
+
+    Args:
+        input_anafora_path (str): annotation path (anafora format)
+        input_thyme_path (str): corpus path (text format)
+        output_brat_path(str): output path where brat files will be created
+        preproc_file_path (str): preprocessing filepath (json format)
+
+    Returns:
+        None
     """
 
+    # Loading json content
     preproc_payload = json.load(open(os.path.abspath(preproc_file_path), "r", encoding="UTF-8"))
 
     for root, dirs, files in os.walk(os.path.abspath(input_anafora_path)):
@@ -63,7 +73,7 @@ def anafora_to_brat(input_anafora_path, input_thyme_path, output_brat_path, prep
                 corrected_entities, last_entity_id = assign_brat_id(corrected_entities)
 
                 # Computing brat relations and assigning a brat ID to relations
-                corrected_relations = compute_brat_relation(relations, corrected_entities)
+                corrected_relations = compute_brat_relations(relations, corrected_entities)
                 corrected_relations, last_relation_id = assign_brat_id(corrected_relations)
 
                 property_id = 1
@@ -121,12 +131,17 @@ def anafora_to_brat(input_anafora_path, input_thyme_path, output_brat_path, prep
     generate_brat_conf_files(os.path.abspath(output_brat_path))
 
 
-def assign_brat_id(elements, start=1):
+def assign_brat_id(elements: list = None,
+                   start: int = 1) -> (list, int):
     """
-    Assign a brat ID for elements of a list of dictionaries
-    :param start:
-    :param elements: element list
-    :return: element list with brat IDs
+    Assign a brat ID for elements in a list of dictionaries
+
+    Args:
+        elements (list): element list
+        start (int): starting index
+
+    Returns:
+        (list, int): element list with brat IDs and last ID
     """
 
     last_id = 0
@@ -138,13 +153,54 @@ def assign_brat_id(elements, start=1):
     return elements, last_id
 
 
-def compute_brat_relation(source_relations, corrected_entities):
+def brat_to_anafora(input_brat_dir: str = None,
+                    output_anafora_dir: str = None) -> None:
     """
-    Compute a brat relation list based on corrected entities and relations extracted from
-    a THYME corpus document
-    :param source_relations: extracted relations
-    :param corrected_entities: corrected entities
-    :return: extracted relations with brat properties
+    Convert a THYME corpus part from brat to anafora
+
+    Args:
+        input_brat_dir (str): annotation path (brat format)
+        output_anafora_dir (str): output path where anafora files will be created
+
+    Returns:
+        None
+    """
+
+    for root, dirs, files in os.walk(os.path.abspath(input_brat_dir)):
+        for filename in files:
+            if re.match("^.*\.ann$", filename):
+
+                document_id = filename.split(".")[0]
+
+                # Fetching entities and relations from files and converting to anafora format
+                source_ann_file = os.path.join(root, filename)
+                entities, relations = parse_ann_file(source_ann_file)
+                ana_entities, ana_relations = convert_brat_payload_to_anafora_payload(entities, relations, document_id)
+
+                # Building target directory
+                target_dir = os.path.join(os.path.abspath(output_anafora_dir), document_id)
+                ensure_dir(target_dir)
+
+                # Creating xml payload
+                target_file = os.path.join(target_dir, "{}.Temporal-Relation.system.completed.xml".format(document_id))
+                xml_payload = generate_payload(ana_entities, ana_relations, document_id)
+
+                # Writing payload to disk
+                tree = etree.ElementTree(xml_payload)
+                tree.write(target_file, pretty_print=True, xml_declaration=True, encoding='UTF-8')
+
+
+def compute_brat_relations(source_relations: list = None,
+                           corrected_entities: list = None) -> list:
+    """
+    Compute a brat relation list based on corrected entities and relations extracted from a THYME corpus document
+
+    Args:
+        source_relations (list): list of relations extracted from the document
+        corrected_entities (list): corrected entities with brat IDs
+
+    Returns:
+        list: brat relations
     """
 
     # Building entity index
@@ -171,40 +227,95 @@ def compute_brat_relation(source_relations, corrected_entities):
     return corrected_relations
 
 
-def correct_and_copy_txt_file(source_txt_file, target_txt_file, preproc_payload):
+def convert_brat_payload_to_anafora_payload(brat_entities: dict = None,
+                                            brat_relations: dict = None,
+                                            document_id: dict = None):
+    """
+    Convert a brat payload (entities and relations) to anafora format
+
+    Args:
+        brat_entities (dict): entities extracted from brat file
+        brat_relations (dict): relations extracted from brat file
+        document_id (str): document ID used for naming elements
+
+    Returns:
+        (list, list): entities and relations in anafora format
+    """
+
+    ana_entities = list()
+    ana_relations = list()
+
+    for brat_id, entity in brat_entities.items():
+        current_entity = {
+            "id": entity["attributes"]["AnaforaID"],
+            "type": entity["type"],
+            "span": entity["spans"],
+            "properties": {k: v for k, v in entity["attributes"].items() if k != "AnaforaID"}
+        }
+
+        ana_entities.append(current_entity)
+
+    for brat_id, relation in brat_relations.items():
+        current_relation = {
+            "id": "{}@r@{}@system".format(brat_id, document_id),
+            "type": "TLINK",
+            "properties": {
+                "Source": brat_entities[relation["arg1"]]["attributes"]["AnaforaID"],
+                "Target": brat_entities[relation["arg2"]]["attributes"]["AnaforaID"],
+                "Type": relation["type"]
+            }
+        }
+
+        ana_relations.append(current_relation)
+
+    return ana_entities, ana_relations
+
+
+def correct_and_copy_txt_file(source_txt_filepath: str = None,
+                              target_txt_filepath: str = None,
+                              preproc_payload: dict = None) -> None:
     """
     Copy and correct a THYME corpus text file from one location to another location
-    :param source_txt_file: source THYME corpus text file
-    :param target_txt_file: target THYME corpus text file
-    :param preproc_payload: preprocessing option file (contains corrections if applicable)
-    :return: nothing
+
+    Args:
+        source_txt_filepath (str): source THYME corpus text filepath
+        target_txt_filepath (str): target THYME corpus text filepath
+        preproc_payload (dict): preprocessing file content
+
+    Returns:
+        None
     """
 
     # Loading text file content
-    content_src = open(os.path.abspath(source_txt_file), "r", encoding="UTF-8", newline='').read()
+    content_src = open(os.path.abspath(source_txt_filepath), "r", encoding="UTF-8", newline='').read()
 
     # Fetching file corrections if available
     for filename in preproc_payload["replace"]:
-        if filename == os.path.basename(source_txt_file):
+        if filename == os.path.basename(source_txt_filepath):
             for begin, end, replacement in preproc_payload["replace"][filename]:
                 content_src = content_src[:begin] + replacement + content_src[end:]
 
     # Copying modified content to target file
-    with open(os.path.abspath(target_txt_file), "w", encoding="UTF-8") as output_file:
+    with open(os.path.abspath(target_txt_filepath), "w", encoding="UTF-8") as output_file:
         output_file.write(content_src)
 
 
-def correct_entity_spans(entities, txt_file_path):
+def correct_entity_spans(entities: list = None,
+                         txt_filepath: str = None) -> list:
     """
     Correct entity span by removing leading and trailing spaces and line breaks.
     Add text span to entities.
-    :param entities: document entity list
-    :param txt_file_path: document path (text format)
-    :return: corrected entity list
+
+    Args:
+        entities (list): entity list extracted from the document
+        txt_filepath (str): THYME document filepath (text format)
+
+    Returns:
+        list: corrected entity list
     """
 
     # Loading document content
-    content = open(os.path.abspath(txt_file_path), "r", encoding="UTF-8").read()
+    content = open(os.path.abspath(txt_filepath), "r", encoding="UTF-8").read()
 
     corrected_entities = list()
 
@@ -243,7 +354,7 @@ def correct_entity_spans(entities, txt_file_path):
             # Sanity check: searching for line break within text spans
             if re.search("\n", span_txt):
                 raise Exception("There is a sentence break in the middle of an entity in document {}: {}".format(
-                    os.path.basename(txt_file_path),
+                    os.path.basename(txt_filepath),
                     entity
                 ))
 
@@ -253,15 +364,93 @@ def correct_entity_spans(entities, txt_file_path):
     return corrected_entities
 
 
-def get_anafora_entities(source_anafora_file):
+def generate_payload(entities: list = None,
+                     relations: list = None,
+                     document_id: list = None) -> etree.Element:
+    """
+    Generate xml payload for a thyme document
+
+    Args:
+        entities (list): list of entities
+        relations (list): list of relations
+        document_id (str): document ID
+
+    Returns:
+        etree.Element: xml payload
+
+    """
+
+    timestamp = time.strftime("%Y-%m-%d-%H:%M:%S")
+
+    root = etree.Element("data")
+
+    el_info = etree.SubElement(root, "info")
+
+    el_savetime = etree.SubElement(el_info, "savetime")
+    el_savetime.text = timestamp
+
+    el_progress = etree.SubElement(el_info, "progress")
+    el_progress.text = "completed"
+
+    el_annotations = etree.SubElement(root, "annotations")
+
+    for entity in entities:
+        el_entity = etree.SubElement(el_annotations, "entity")
+
+        el_id = etree.SubElement(el_entity, "id")
+        el_id.text = entity["id"]
+
+        el_span = etree.SubElement(el_entity, "span")
+        el_span.text = ";".join(["{},{}".format(b, e) for b, e in entity["span"]])
+
+        el_type = etree.SubElement(el_entity, "type")
+        el_type.text = entity["type"]
+
+        el_parents_type = etree.SubElement(el_entity, "parentsType")
+        el_parents_type.text = "TemporalEntities"
+
+        el_properties = etree.SubElement(el_entity, "properties")
+        for att_tag, att_value in entity["properties"].items():
+            el_attribute = etree.SubElement(el_properties, att_tag)
+            el_attribute.text = att_value
+
+    relation_id = 1
+
+    for relation in relations:
+        el_relation = etree.SubElement(el_annotations, "relation")
+
+        el_id = etree.SubElement(el_relation, "id")
+        el_id.text = "{}@r@{}@system".format(relation_id, document_id)
+
+        el_type = etree.SubElement(el_relation, "type")
+        el_type.text = relation["type"]
+
+        relation_id += 1
+
+        el_parents_type = etree.SubElement(el_relation, "parentsType")
+        el_parents_type.text = "TemporalRelations"
+
+        el_properties = etree.SubElement(el_relation, "properties")
+        for att_tag, att_value in relation["properties"].items():
+            el_attribute = etree.SubElement(el_properties, att_tag)
+            el_attribute.text = str(att_value)
+
+    return root
+
+
+def get_anafora_entities(source_anafora_filepath: str = None) -> list:
     """
     Extract entities from a THYME corpus anafora file
-    :param source_anafora_file: source anafora file
-    :return: list of entities
+
+    Args:
+        source_anafora_filepath (str): source anafora filepath
+
+    Returns:
+        list: entity list
     """
 
     # Parsing xml file
-    tree = etree.parse(source_anafora_file)
+    tree = etree.parse(source_anafora_filepath)
     root = tree.getroot()
 
     # Finding annotations element
@@ -272,7 +461,7 @@ def get_anafora_entities(source_anafora_file):
     if adjudication is not None:
         if len(adjudication) > 0:
             raise Exception("The file {} is marked as 'completed' but contains adjudication annotations".format(
-                os.path.basename(source_anafora_file)
+                os.path.basename(source_anafora_filepath)
             ))
 
     # Fetching entity elements from annotation element
@@ -313,15 +502,19 @@ def get_anafora_entities(source_anafora_file):
     return extracted_entities
 
 
-def get_anafora_relations(source_anafora_file):
+def get_anafora_relations(source_anafora_filepath: str = None) -> list:
     """
     Extract relations from a THYME corpus anafora file
-    :param source_anafora_file: source anafora file
-    :return: list of relations
+
+    Args:
+        source_anafora_filepath (str): source anafora filepath
+
+    Returns:
+        list: relation list
     """
 
     # Parsing xml file
-    tree = etree.parse(source_anafora_file)
+    tree = etree.parse(source_anafora_filepath)
     root = tree.getroot()
 
     # Finding annotations element
@@ -332,7 +525,7 @@ def get_anafora_relations(source_anafora_file):
     if adjudication is not None:
         if len(adjudication) > 0:
             raise Exception("The file {} is marked as 'completed' but contains adjudication annotations".format(
-                os.path.basename(source_anafora_file)
+                os.path.basename(source_anafora_filepath)
             ))
 
     # Fetching relation elements from annotations element
@@ -365,16 +558,20 @@ def get_anafora_relations(source_anafora_file):
     return extracted_relations
 
 
-def is_in_progress(source_anafora_file):
+def is_in_progress(source_anafora_filepath: str = None) -> bool:
     """
     Check if the annotation process is 'completed' or 'in-progress'.
     Raise Exception if status is unknown.
-    :param source_anafora_file: anafora file path
-    :return: 'True' if annotation is in progress, 'False' otherwise
+
+    Args:
+        source_anafora_filepath (str): anafora filepath
+
+    Returns:
+        bool: 'True' if annotation is in progress, 'False' otherwise
     """
 
     # Parsing xml file
-    tree = etree.parse(source_anafora_file)
+    tree = etree.parse(source_anafora_filepath)
     root = tree.getroot()
 
     # Fetching progress information element
@@ -389,6 +586,6 @@ def is_in_progress(source_anafora_file):
 
     else:
         raise Exception("Invalid progress value for file {}: {}".format(
-            source_anafora_file,
+            source_anafora_filepath,
             progress.text
         ))

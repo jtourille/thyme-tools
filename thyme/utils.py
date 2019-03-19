@@ -1,28 +1,37 @@
 import os
 
 
-def ensure_dir(directory):
+def ensure_dir(dir_path: str = None):
     """
     Create a directory
-    :param directory: path to create
-    :return: nothing
+
+    Args:
+        dir_path (str): directory path
+
+    Returns:
+        None
     """
 
     try:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
     except OSError as e:
         # Raising any errors except concurrent access
         if e.errno != 17:
             raise
 
 
-def get_other_extension(filename, target_extension):
+def get_other_extension(filename: str = None,
+                        target_extension: str = None):
     """
-    Get a file path with another extension
-    :param filename: file path
-    :param target_extension: new extension
-    :return: new file path
+    Get a filename with another extension
+
+    Args:
+        filename (str): input filename
+        target_extension (str): desired extension
+
+    Returns:
+        str: new filename
     """
 
     basename, extension = os.path.splitext(filename)
@@ -30,11 +39,15 @@ def get_other_extension(filename, target_extension):
     return "{0}.{1}".format(basename, target_extension)
 
 
-def remove_abs(path):
+def remove_abs(path: str = None):
     """
     Remove leading '/' from path
-    :param path: input path
-    :return: stripped path
+
+    Args:
+        path (str): input path
+
+    Returns:
+        str: stripped path
     """
 
     if os.path.isabs(path):
