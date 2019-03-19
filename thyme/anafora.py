@@ -30,6 +30,8 @@ def anafora_to_brat(input_anafora_path: str = None,
         None
     """
 
+    corrected_entities_nb = 0
+
     # Loading json content
     preproc_payload = json.load(open(os.path.abspath(preproc_file_path), "r", encoding="UTF-8"))
 
@@ -69,8 +71,10 @@ def anafora_to_brat(input_anafora_path: str = None,
                 relations = get_anafora_relations(source_anafora_file)
 
                 # Correcting entity spans and assigning a brat ID to entities
-                corrected_entities = correct_entity_spans(entities, target_txt_file)
+                corrected_entities, nb = correct_entity_spans(entities, target_txt_file)
                 corrected_entities, last_entity_id = assign_brat_id(corrected_entities)
+
+                corrected_entities_nb += nb
 
                 # Computing brat relations and assigning a brat ID to relations
                 corrected_relations = compute_brat_relations(relations, corrected_entities)
@@ -126,6 +130,8 @@ def anafora_to_brat(input_anafora_path: str = None,
                                 relation["brat_arg2"]
                             )
                         )
+
+    logging.info("Number of corrected entities: {}".format(corrected_entities_nb))
 
     # Generating a set of brat configuration files for the current directory
     generate_brat_conf_files(os.path.abspath(output_brat_path))
@@ -301,7 +307,7 @@ def correct_and_copy_txt_file(source_txt_filepath: str = None,
 
 
 def correct_entity_spans(entities: list = None,
-                         txt_filepath: str = None) -> list:
+                         txt_filepath: str = None):
     """
     Correct entity span by removing leading and trailing spaces and line breaks.
     Add text span to entities.
@@ -313,6 +319,8 @@ def correct_entity_spans(entities: list = None,
     Returns:
         list: corrected entity list
     """
+
+    corrected_entities_nb = 0
 
     # Loading document content
     content = open(os.path.abspath(txt_filepath), "r", encoding="UTF-8").read()
@@ -347,6 +355,9 @@ def correct_entity_spans(entities: list = None,
             end -= offset_right
             span_txt = content[begin:end]
 
+            if offset_right > 0 or offset_left > 0:
+                corrected_entities_nb += 1
+
             # Appending computed properties to entity
             current_entity["span"].append((begin, end))
             current_entity["text"].append(span_txt)
@@ -361,7 +372,7 @@ def correct_entity_spans(entities: list = None,
         # Appending corrected entity to list
         corrected_entities.append(current_entity)
 
-    return corrected_entities
+    return corrected_entities, corrected_entities_nb
 
 
 def generate_payload(entities: list = None,
